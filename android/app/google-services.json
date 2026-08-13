@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "267696690048",
+    "project_id": "harvestguard-ai-323b4",
+    "storage_bucket": "harvestguard-ai-323b4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:267696690048:android:acfa8f7aaeff955db1a765",
+        "android_client_info": {
+          "package_name": "com.example.harvestguard_ai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxdWLaUJHwYT-FOZNtS0HFXFrZJp4ohDg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
