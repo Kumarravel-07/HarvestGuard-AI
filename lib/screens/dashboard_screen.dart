@@ -5,6 +5,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../services/weather_service.dart';
+import '../services/app_localizations.dart';
 import 'history_screen.dart';
 import 'prediction_screen.dart';
 import 'profile_screen.dart';
@@ -58,13 +59,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: _green,
         unselectedItemColor: Colors.black87,
-        selectedLabelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        selectedLabelStyle: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+        ),
         unselectedLabelStyle: const TextStyle(fontSize: 14),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 28), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.eco_outlined, size: 28), label: 'Predict'),
-          BottomNavigationBarItem(icon: Icon(Icons.history_outlined, size: 28), label: 'History'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline, size: 28), label: 'Profile'),
+        items: [
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.home_outlined, size: 28),
+            label: tr(context, 'home'),
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.eco_outlined, size: 28),
+            label: tr(context, 'predict'),
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.history_outlined, size: 28),
+            label: tr(context, 'history'),
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.person_outline, size: 28),
+            label: tr(context, 'profile'),
+          ),
         ],
       ),
     );
@@ -213,7 +229,8 @@ class _HomeTabState extends State<_HomeTab> {
       final main = weather['main'];
       final temperature = main is Map ? main['temp'] : null;
       final humidity = main is Map ? main['humidity'] : null;
-      final condition = (firstWeather?['main'] as String?) ??
+      final condition =
+          (firstWeather?['main'] as String?) ??
           (firstWeather?['description'] as String?);
       final resolvedLocation = city.isEmpty
           ? (weather['name'] as String? ?? '')
@@ -273,12 +290,17 @@ class _HomeTabState extends State<_HomeTab> {
   @override
   Widget build(BuildContext context) {
     if (widget.user == null) {
-      return const Center(
-        child: Text('Please sign in to view your dashboard.', style: TextStyle(fontSize: 20)),
+      return Center(
+        child: Text(
+          tr(context, 'signInToViewDashboard'),
+          style: TextStyle(fontSize: 20),
+        ),
       );
     }
 
-    final profile = FirebaseFirestore.instance.collection('users').doc(widget.user!.uid);
+    final profile = FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.user!.uid);
     final predictions = profile.collection('predictions');
 
     return SingleChildScrollView(
@@ -291,9 +313,11 @@ class _HomeTabState extends State<_HomeTab> {
             StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
               stream: profile.snapshots(),
               builder: (context, snapshot) {
-                final name = snapshot.data?.data()?['fullName'] as String? ?? 'Farmer';
+                final name =
+                    snapshot.data?.data()?['fullName'] as String? ??
+                    tr(context, 'unknownUserName');
                 return Text(
-                  'Welcome, $name \u{1F44B}',
+                  tr(context, 'welcomeGreeting').replaceFirst('{name}', name),
                   style: const TextStyle(
                     color: _green,
                     fontSize: 28,
@@ -318,20 +342,25 @@ class _HomeTabState extends State<_HomeTab> {
               height: 60,
               child: ElevatedButton.icon(
                 onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => const PredictionScreen()),
+                  MaterialPageRoute<void>(
+                    builder: (_) => const PredictionScreen(),
+                  ),
                 ),
                 icon: const Icon(Icons.add_a_photo_outlined, size: 28),
-                label: const Text('Start New Prediction'),
+                label: Text(tr(context, 'startPrediction')),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _green,
                   foregroundColor: Colors.white,
-                  textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                  textStyle: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 32),
-            const Text(
-              'Your Summary',
+            Text(
+              tr(context, 'yourSummary'),
               style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 14),
@@ -343,7 +372,9 @@ class _HomeTabState extends State<_HomeTab> {
                     .where((item) => _savedPredictionRisk(item.data()) == 'low')
                     .length;
                 final high = records
-                    .where((item) => _savedPredictionRisk(item.data()) == 'high')
+                    .where(
+                      (item) => _savedPredictionRisk(item.data()) == 'high',
+                    )
                     .length;
                 return _SummarySection(
                   total: records.length,
@@ -355,18 +386,20 @@ class _HomeTabState extends State<_HomeTab> {
             const SizedBox(height: 32),
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Latest Predictions',
+                    tr(context, 'latestPredictions'),
                     style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800),
                   ),
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => const HistoryScreen()),
+                    MaterialPageRoute<void>(
+                      builder: (_) => const HistoryScreen(),
+                    ),
                   ),
-                  child: const Text(
-                    'View All',
+                  child: Text(
+                    tr(context, 'viewAll'),
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -379,9 +412,12 @@ class _HomeTabState extends State<_HomeTab> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return const Padding(
+                  return Padding(
                     padding: EdgeInsets.only(top: 12),
-                    child: Text('Could not load prediction history.', style: TextStyle(fontSize: 18)),
+                    child: Text(
+                      tr(context, 'couldNotLoadHistory'),
+                      style: TextStyle(fontSize: 18),
+                    ),
                   );
                 }
                 if (!snapshot.hasData) {
@@ -392,9 +428,12 @@ class _HomeTabState extends State<_HomeTab> {
                 }
                 final records = snapshot.data!.docs;
                 if (records.isEmpty) {
-                  return const Padding(
+                  return Padding(
                     padding: EdgeInsets.only(top: 12),
-                    child: Text('No predictions yet. Start your first prediction!', style: TextStyle(fontSize: 18)),
+                    child: Text(
+                      tr(context, 'noPredictionsStart'),
+                      style: TextStyle(fontSize: 18),
+                    ),
                   );
                 }
                 return Column(
@@ -409,7 +448,6 @@ class _HomeTabState extends State<_HomeTab> {
       ),
     );
   }
-
 }
 
 String _savedPredictionRisk(Map<String, dynamic> data) {
@@ -497,17 +535,26 @@ class _WeatherCard extends StatelessWidget {
                 ),
               )
             else if (errorMessage != null)
-              Text(errorMessage!, style: const TextStyle(fontSize: 16, height: 1.35))
+              Text(
+                errorMessage!,
+                style: const TextStyle(fontSize: 16, height: 1.35),
+              )
             else ...[
               if (location != null && location!.isNotEmpty) ...[
                 Row(
                   children: [
-                    const Icon(Icons.location_on_outlined, color: Color(0xFF1B5E20)),
+                    const Icon(
+                      Icons.location_on_outlined,
+                      color: Color(0xFF1B5E20),
+                    ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         location!,
-                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
@@ -543,7 +590,11 @@ class _WeatherCard extends StatelessWidget {
 }
 
 class _WeatherValue extends StatelessWidget {
-  const _WeatherValue({required this.icon, required this.label, required this.value});
+  const _WeatherValue({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   final IconData icon;
   final String label;
@@ -555,16 +606,27 @@ class _WeatherValue extends StatelessWidget {
       children: [
         Icon(icon, color: const Color(0xFF1B5E20), size: 30),
         const SizedBox(height: 6),
-        Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+        ),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(fontSize: 14), textAlign: TextAlign.center),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 14),
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }
 }
 
 class _SummarySection extends StatelessWidget {
-  const _SummarySection({required this.total, required this.safe, required this.highRisk});
+  const _SummarySection({
+    required this.total,
+    required this.safe,
+    required this.highRisk,
+  });
 
   final int total;
   final int safe;
@@ -574,18 +636,40 @@ class _SummarySection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: _SummaryCard(label: 'Total', value: total, color: Colors.blue.shade700)),
+        Expanded(
+          child: _SummaryCard(
+            label: 'Total',
+            value: total,
+            color: Colors.blue.shade700,
+          ),
+        ),
         const SizedBox(width: 10),
-        Expanded(child: _SummaryCard(label: 'Safe', value: safe, color: Colors.green.shade700)),
+        Expanded(
+          child: _SummaryCard(
+            label: 'Safe',
+            value: safe,
+            color: Colors.green.shade700,
+          ),
+        ),
         const SizedBox(width: 10),
-        Expanded(child: _SummaryCard(label: 'High Risk', value: highRisk, color: Colors.red.shade700)),
+        Expanded(
+          child: _SummaryCard(
+            label: 'High Risk',
+            value: highRisk,
+            color: Colors.red.shade700,
+          ),
+        ),
       ],
     );
   }
 }
 
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.label, required this.value, required this.color});
+  const _SummaryCard({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   final String label;
   final int value;
@@ -598,9 +682,20 @@ class _SummaryCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         child: Column(
           children: [
-            Text('$value', style: TextStyle(color: color, fontSize: 28, fontWeight: FontWeight.w800)),
+            Text(
+              '$value',
+              style: TextStyle(
+                color: color,
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text(label, style: const TextStyle(fontSize: 15), textAlign: TextAlign.center),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 15),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),
@@ -643,7 +738,13 @@ class _PredictionCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(cropName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                  Text(
+                    cropName,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Text(date, style: const TextStyle(fontSize: 16)),
                 ],
@@ -651,10 +752,17 @@ class _PredictionCard extends StatelessWidget {
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-              decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(20)),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(20),
+              ),
               child: Text(
                 risk.toUpperCase(),
-                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ],

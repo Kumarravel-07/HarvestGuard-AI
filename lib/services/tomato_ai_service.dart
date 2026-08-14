@@ -3,15 +3,9 @@ import 'package:flutter_litert/flutter_litert.dart';
 import 'package:image/image.dart' as img;
 
 class TomatoAiService {
-  static const String modelPath =
-      'assets/models/tomato_classifier.tflite';
+  static const String modelPath = 'assets/models/tomato_classifier.tflite';
 
-  static const List<String> labels = [
-    'Damaged',
-    'Old',
-    'Ripe',
-    'Unripe',
-  ];
+  static const List<String> labels = ['Damaged', 'Old', 'Ripe', 'Unripe'];
 
   Interpreter? _interpreter;
 
@@ -37,11 +31,7 @@ class TomatoAiService {
     }
 
     // Resize to MobileNetV2 input size
-    final resized = img.copyResize(
-      image,
-      width: 224,
-      height: 224,
-    );
+    final resized = img.copyResize(image, width: 224, height: 224);
 
     // MobileNetV2 preprocessing:
     // pixel 0-255 -> -1 to +1
@@ -49,23 +39,20 @@ class TomatoAiService {
       1,
       (_) => List.generate(
         224,
-        (y) => List.generate(
-          224,
-          (x) {
-            final pixel = resized.getPixel(x, y);
+        (y) => List.generate(224, (x) {
+          final pixel = resized.getPixel(x, y);
 
-            return [
-              (pixel.r.toDouble() / 127.5) - 1.0,
-              (pixel.g.toDouble() / 127.5) - 1.0,
-              (pixel.b.toDouble() / 127.5) - 1.0,
-            ];
-          },
-        ),
+          return [
+            (pixel.r.toDouble() / 127.5) - 1.0,
+            (pixel.g.toDouble() / 127.5) - 1.0,
+            (pixel.b.toDouble() / 127.5) - 1.0,
+          ];
+        }),
       ),
     );
 
     final output = [
-      [0.0, 0.0, 0.0, 0.0]
+      [0.0, 0.0, 0.0, 0.0],
     ];
 
     _interpreter!.run(input, output);

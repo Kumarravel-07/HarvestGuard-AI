@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../services/app_localizations.dart';
+
 /// A large, UI-only account creation form for HarvestGuard AI.
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -46,7 +48,7 @@ class _SignupScreenState extends State<SignupScreen> {
         foregroundColor: _green,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back to sign in',
+          tooltip: tr(context, 'backToSignIn'),
           icon: const Icon(Icons.arrow_back, size: 32),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -63,20 +65,23 @@ class _SignupScreenState extends State<SignupScreen> {
                 children: [
                   const Icon(Icons.agriculture, color: _green, size: 76),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Create Your Account',
+                  Text(
+                    tr(context, 'createYourAccount'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: _green,
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Join HarvestGuard AI',
+                  Text(
+                    tr(context, 'joinHarvestGuard'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 28),
                   TextField(
@@ -84,7 +89,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     textInputAction: TextInputAction.next,
                     style: const TextStyle(fontSize: 20),
                     decoration: _fieldDecoration(
-                      label: 'Full Name',
+                      label: tr(context, 'fullName'),
                       icon: Icons.person_outline,
                     ),
                   ),
@@ -95,7 +100,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     textInputAction: TextInputAction.next,
                     style: const TextStyle(fontSize: 20),
                     decoration: _fieldDecoration(
-                      label: 'Email',
+                      label: tr(context, 'emailAddress'),
                       icon: Icons.email_outlined,
                     ),
                   ),
@@ -106,7 +111,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     textInputAction: TextInputAction.next,
                     style: const TextStyle(fontSize: 20),
                     decoration: _fieldDecoration(
-                      label: 'Mobile Number',
+                      label: tr(context, 'mobileNumber'),
                       icon: Icons.phone_outlined,
                     ),
                   ),
@@ -117,11 +122,10 @@ class _SignupScreenState extends State<SignupScreen> {
                     textInputAction: TextInputAction.next,
                     style: const TextStyle(fontSize: 20),
                     decoration: _passwordDecoration(
-                      label: 'Password',
+                      label: tr(context, 'password'),
                       hidden: _hidePassword,
-                      onToggle: () => setState(
-                        () => _hidePassword = !_hidePassword,
-                      ),
+                      onToggle: () =>
+                          setState(() => _hidePassword = !_hidePassword),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -131,7 +135,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     textInputAction: TextInputAction.done,
                     style: const TextStyle(fontSize: 20),
                     decoration: _passwordDecoration(
-                      label: 'Confirm Password',
+                      label: tr(context, 'confirmPassword'),
                       hidden: _hideConfirmPassword,
                       onToggle: () => setState(
                         () => _hideConfirmPassword = !_hideConfirmPassword,
@@ -160,7 +164,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 strokeWidth: 3,
                               ),
                             )
-                          : const Text('SIGN UP'),
+                          : Text(tr(context, 'signupTitle')),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -173,12 +177,12 @@ class _SignupScreenState extends State<SignupScreen> {
                       minimumSize: const Size.fromHeight(55),
                       textStyle: const TextStyle(fontSize: 18),
                     ),
-                    child: const Text.rich(
+                    child: Text.rich(
                       TextSpan(
-                        text: 'Already have an account? ',
+                        text: '${tr(context, 'alreadyHaveAccount')} ',
                         children: [
                           TextSpan(
-                            text: 'SIGN IN',
+                            text: tr(context, 'signIn'),
                             style: TextStyle(fontWeight: FontWeight.w800),
                           ),
                         ],
@@ -237,23 +241,23 @@ class _SignupScreenState extends State<SignupScreen> {
     final confirmPassword = _confirmPasswordController.text;
 
     if (name.isEmpty) {
-      _showMessage('Please enter your full name.');
+      _showMessage(tr(context, 'pleaseEnterFullName'));
       return;
     }
     if (email.isEmpty || !email.contains('@')) {
-      _showMessage('Please enter a valid email address.');
+      _showMessage(tr(context, 'pleaseEnterValidEmail'));
       return;
     }
     if (mobile.length < 10) {
-      _showMessage('Please enter a valid mobile number.');
+      _showMessage(tr(context, 'pleaseEnterValidMobile'));
       return;
     }
     if (password.length < 6) {
-      _showMessage('Password must be at least 6 characters.');
+      _showMessage(tr(context, 'passwordMinLength'));
       return;
     }
     if (password != confirmPassword) {
-      _showMessage('Passwords do not match.');
+      _showMessage(tr(context, 'passwordsDoNotMatch'));
       return;
     }
 
@@ -275,31 +279,33 @@ class _SignupScreenState extends State<SignupScreen> {
         'createdAt': FieldValue.serverTimestamp(),
       });
       if (!mounted) return;
-      _showMessage('Account created successfully. Please sign in.');
+      _showMessage(tr(context, 'accountCreatedSuccessfully'));
       Navigator.of(context).pop();
     } on FirebaseAuthException catch (error) {
       if (mounted) _showMessage(_authErrorMessage(error));
     } catch (_) {
-      if (mounted) _showMessage('Unable to create your account. Please try again.');
+      if (mounted) _showMessage(tr(context, 'unableCreateAccount'));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   String _authErrorMessage(FirebaseAuthException error) {
     switch (error.code) {
       case 'email-already-in-use':
-        return 'An account already exists with this email.';
+        return tr(context, 'emailAlreadyInUse');
       case 'invalid-email':
-        return 'Please enter a valid email address.';
+        return tr(context, 'pleaseEnterValidEmail');
       case 'weak-password':
-        return 'Please choose a stronger password.';
+        return tr(context, 'weakPassword');
       default:
-        return error.message ?? 'Unable to create your account. Please try again.';
+        return error.message ?? tr(context, 'unableCreateAccount');
     }
   }
 }

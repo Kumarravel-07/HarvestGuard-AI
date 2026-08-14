@@ -8,10 +8,14 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:harvestguard_ai/main.dart';
+import 'package:harvestguard_ai/services/app_localizations.dart';
 
 void main() {
   testWidgets('language selection opens the login screen', (tester) async {
-    await tester.pumpWidget(const HarvestGuardAI());
+    final languageController = AppLanguageController();
+    await languageController.load();
+
+    await tester.pumpWidget(HarvestGuardAI(languageController: languageController));
 
     await tester.tap(find.text('English'));
     await tester.pumpAndSettle();

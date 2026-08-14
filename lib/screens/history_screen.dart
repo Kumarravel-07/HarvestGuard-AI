@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../models/prediction_history_record.dart';
 import '../services/prediction_history_service.dart';
+import '../services/app_localizations.dart';
 import 'result_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -22,19 +23,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final shouldClear = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear History?'),
-        content: const Text(
-          'This will permanently remove all saved prediction history.',
-        ),
+        title: Text(tr(context, 'clearHistoryDialogTitle')),
+        content: Text(tr(context, 'clearHistoryDialogMessage')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(tr(context, 'cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Clear History'),
+            child: Text(tr(context, 'clearHistory')),
           ),
         ],
       ),
@@ -47,7 +46,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to clear prediction history.')),
+        SnackBar(content: Text(tr(context, 'unableClearHistory'))),
       );
     }
   }
@@ -61,31 +60,29 @@ class _HistoryScreenState extends State<HistoryScreen> {
         surfaceTintColor: Colors.white,
         foregroundColor: _green,
         elevation: 0,
-        title: const Text(
-          'Prediction History',
+        title: Text(
+          tr(context, 'historyTitle'),
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
         ),
         actions: [
           if (_isSignedIn)
             IconButton(
-              tooltip: 'Clear History',
+              tooltip: tr(context, 'clearHistory'),
               onPressed: _confirmClearHistory,
               icon: const Icon(Icons.delete_outline),
             ),
         ],
       ),
-      body: SafeArea(
-        child: _isSignedIn ? _historyBody() : _signedOutBody(),
-      ),
+      body: SafeArea(child: _isSignedIn ? _historyBody() : _signedOutBody()),
     );
   }
 
   Widget _signedOutBody() {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 24),
         child: Text(
-          'Please sign in to see your prediction history.',
+          tr(context, 'signInToViewHistory'),
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 18),
         ),
@@ -98,11 +95,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
       stream: _historyService.watchHistory(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const Center(
+          return Center(
             child: Padding(
               padding: EdgeInsets.all(24),
               child: Text(
-                'Unable to load history. Please try again later.',
+                tr(context, 'unableLoadHistory'),
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18),
               ),
@@ -115,7 +112,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         }
 
         final records = snapshot.data!;
-        if (records.isEmpty) return _emptyHistory();
+        if (records.isEmpty) return _emptyHistory(context);
 
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
@@ -140,7 +137,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   location: records[index].location,
                   temperature: records[index].temperature,
                   humidity: records[index].humidity,
-                  reminderKey: records[index].documentId ??
+                  reminderKey:
+                      records[index].documentId ??
                       'batch_${records[index].createdAt.millisecondsSinceEpoch}',
                 ),
               ),
@@ -151,17 +149,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _emptyHistory() {
-    return const Center(
+  Widget _emptyHistory(BuildContext context) {
+    return Center(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 32),
+        padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.history_rounded, size: 84, color: _green),
-            SizedBox(height: 20),
+            const Icon(Icons.history_rounded, size: 84, color: _green),
+            const SizedBox(height: 20),
             Text(
-              'No predictions yet. Your completed predictions will appear here.',
+              tr(context, 'noPredictions'),
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 18, height: 1.4),
             ),
@@ -205,7 +203,10 @@ class _PredictionHistoryCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       _formatDateTime(record.createdAt),
-                      style: const TextStyle(fontSize: 15, color: Colors.black54),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.black54,
+                      ),
                     ),
                   ),
                   _RiskBadge(risk: record.spoilageRisk, color: _riskColor),
@@ -214,17 +215,23 @@ class _PredictionHistoryCard extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 record.overallCondition,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
-                '${record.totalImages} tomato image${record.totalImages == 1 ? '' : 's'} analyzed',
+                '${record.totalImages} ${tr(context, 'tomato')} ${tr(context, 'batchAnalysis')}',
                 style: const TextStyle(fontSize: 16),
               ),
               const SizedBox(height: 14),
               Text(
-                'Damaged ${record.damagedCount}  •  Old ${record.oldCount}  •  Ripe ${record.ripeCount}  •  Unripe ${record.unripeCount}',
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                '${tr(context, 'damaged')} ${record.damagedCount}  •  ${tr(context, 'old')} ${record.oldCount}  •  ${tr(context, 'ripe')} ${record.ripeCount}  •  ${tr(context, 'unripe')} ${record.unripeCount}',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -258,7 +265,11 @@ class _RiskBadge extends StatelessWidget {
       ),
       child: Text(
         risk.toUpperCase(),
-        style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w800),
+        style: TextStyle(
+          color: color,
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }

@@ -25,13 +25,17 @@ class PredictionHistoryService {
     final records = _records;
     if (records == null) return Stream.value(const []);
 
-    return records.orderBy('createdAt', descending: true).snapshots().map(
+    return records
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
           (snapshot) => snapshot.docs
-              .map((document) =>
-                  PredictionHistoryRecord.fromFirestore(
-                    document.data(),
-                    documentId: document.id,
-                  ))
+              .map(
+                (document) => PredictionHistoryRecord.fromFirestore(
+                  document.data(),
+                  documentId: document.id,
+                ),
+              )
               .toList(),
         );
   }

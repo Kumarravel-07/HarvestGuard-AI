@@ -5,10 +5,9 @@ class WeatherService {
   static const String apiKey = "7e46702b9023144ec79c139c543fee85";
 
   Future<Map<String, dynamic>?> getWeather(
-      double latitude,
-      double longitude,
-      ) async {
-
+    double latitude,
+    double longitude,
+  ) async {
     final url = Uri.parse(
       "https://api.openweathermap.org/data/2.5/weather"
       "?lat=$latitude"

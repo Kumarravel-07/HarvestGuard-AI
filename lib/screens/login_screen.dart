@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../services/app_localizations.dart';
 import 'dashboard_screen.dart';
 import 'signup_screen.dart';
 
@@ -40,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
         foregroundColor: _green,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back to language selection',
+          tooltip: tr(context, 'backToLanguageSelection'),
           icon: const Icon(Icons.arrow_back, size: 32),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -57,20 +58,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   const Icon(Icons.agriculture, color: _green, size: 88),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'HarvestGuard AI',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: _green,
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Welcome to HarvestGuard AI',
+                  Text(
+                    tr(context, 'welcomeToHarvestGuard'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 36),
                   TextField(
@@ -79,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     textInputAction: TextInputAction.next,
                     style: const TextStyle(fontSize: 20),
                     decoration: _fieldDecoration(
-                      label: 'Email address',
+                      label: tr(context, 'emailAddress'),
                       icon: Icons.email_outlined,
                     ),
                   ),
@@ -89,23 +93,25 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: _hidePassword,
                     textInputAction: TextInputAction.done,
                     style: const TextStyle(fontSize: 20),
-                    decoration: _fieldDecoration(
-                      label: 'Password',
-                      icon: Icons.lock_outline,
-                    ).copyWith(
-                      suffixIcon: IconButton(
-                        tooltip: _hidePassword ? 'Show password' : 'Hide password',
-                        icon: Icon(
-                          _hidePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          size: 28,
+                    decoration:
+                        _fieldDecoration(
+                          label: tr(context, 'password'),
+                          icon: Icons.lock_outline,
+                        ).copyWith(
+                          suffixIcon: IconButton(
+                            tooltip: _hidePassword
+                                ? tr(context, 'passwordTooltipShow')
+                                : tr(context, 'passwordTooltipHide'),
+                            icon: Icon(
+                              _hidePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              size: 28,
+                            ),
+                            onPressed: () =>
+                                setState(() => _hidePassword = !_hidePassword),
+                          ),
                         ),
-                        onPressed: () => setState(
-                          () => _hidePassword = !_hidePassword,
-                        ),
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 32),
                   SizedBox(
@@ -129,7 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 strokeWidth: 3,
                               ),
                             )
-                          : const Text('LOGIN'),
+                          : Text(tr(context, 'loginTitle')),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -145,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      child: const Text('Create Account'),
+                      child: Text(tr(context, 'createAccount')),
                     ),
                   ),
                 ],
@@ -181,11 +187,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text;
 
     if (email.isEmpty || !email.contains('@')) {
-      _showPlaceholder('Please enter a valid email address.');
+      _showPlaceholder(tr(context, 'pleaseEnterValidEmail'));
       return;
     }
     if (password.isEmpty) {
-      _showPlaceholder('Please enter your password.');
+      _showPlaceholder(tr(context, 'pleaseEnterPassword'));
       return;
     }
 
@@ -196,7 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
         password: password,
       );
       if (!mounted) return;
-      _showPlaceholder('Login successful.');
+      _showPlaceholder(tr(context, 'loginSuccessful'));
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute<void>(builder: (_) => const DashboardScreen()),
         (route) => false,
@@ -204,32 +210,34 @@ class _LoginScreenState extends State<LoginScreen> {
     } on FirebaseAuthException catch (error) {
       if (mounted) _showPlaceholder(_authErrorMessage(error));
     } catch (_) {
-      if (mounted) _showPlaceholder('Unable to sign in. Please try again.');
+      if (mounted) _showPlaceholder(tr(context, 'unableSignIn'));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _openSignUp() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const SignupScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const SignupScreen()));
   }
 
   void _showPlaceholder(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   String _authErrorMessage(FirebaseAuthException error) {
     switch (error.code) {
       case 'invalid-email':
-        return 'Please enter a valid email address.';
+        return tr(context, 'pleaseEnterValidEmail');
       case 'user-not-found':
       case 'wrong-password':
       case 'invalid-credential':
-        return 'Email or password is incorrect.';
+        return tr(context, 'emailOrPasswordIncorrect');
       default:
-        return error.message ?? 'Unable to sign in. Please try again.';
+        return error.message ?? tr(context, 'unableSignIn');
     }
   }
 }

@@ -5,6 +5,7 @@ import '../services/weather_service.dart';
 import '../services/tomato_ai_service.dart';
 import '../services/prediction_history_service.dart';
 import '../models/prediction_history_record.dart';
+import '../services/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'result_screen.dart';
@@ -37,7 +38,25 @@ class _PredictionScreenState extends State<PredictionScreen> {
   final TomatoAiService _tomatoAiService = TomatoAiService();
   final PredictionHistoryService _historyService = PredictionHistoryService();
 
+  bool get _hasRequiredPredictionDetails =>
+      _storage != null && _packaging != null && _transport != null;
+
   bool get _canPredict => _overallImage != null && _closeUpImages.length >= 2;
+
+  void _validateAndOpenResult() {
+    if (!_hasRequiredPredictionDetails) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please select Storage Type, Packaging Type and Transport Mode before predicting.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    _openResult();
+  }
 
   Future<void> _getCurrentLocation() async {
     try {
@@ -61,7 +80,8 @@ class _PredictionScreenState extends State<PredictionScreen> {
         position.longitude,
       );
       final city = _cityFromPlacemarks(placemarks);
-      if (city.isEmpty) throw Exception('Unable to identify your current location.');
+      if (city.isEmpty)
+        throw Exception('Unable to identify your current location.');
 
       _locationController.text = city;
       await _fetchWeatherForCoordinates(
@@ -197,8 +217,8 @@ class _PredictionScreenState extends State<PredictionScreen> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         foregroundColor: _green,
-        title: const Text(
-          'Tomato Batch Prediction',
+        title: Text(
+          tr(context, 'prediction'),
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
         ),
       ),
@@ -212,15 +232,14 @@ class _PredictionScreenState extends State<PredictionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const _SectionTitle(
-                    title: 'Capture Tomato Batch',
-                    description:
-                        'Take one overall photo of the tomato batch and 2-3 close-up photos from different parts of the batch.',
+                  _SectionTitle(
+                    title: tr(context, 'captureBatch'),
+                    description: tr(context, 'captureBatchDescription'),
                   ),
                   const SizedBox(height: 20),
                   _ImageCaptureSection(
-                    title: 'One Overall Batch Photo',
-                    description: 'crate, basket, gunny bag, carton or heap',
+                    title: tr(context, 'overallBatchPhoto'),
+                    description: tr(context, 'batchPhotoDescription'),
                     image: _overallImage,
                     onCamera: () => _pickOverall(ImageSource.camera),
                     onGallery: () => _pickOverall(ImageSource.gallery),
@@ -237,10 +256,11 @@ class _PredictionScreenState extends State<PredictionScreen> {
                     onRetake: _retakeCloseUp,
                   ),
                   const SizedBox(height: 32),
-                  const _SectionTitle(title: 'Storage Details'),
+                  _SectionTitle(title: tr(context, 'storageDetails')),
                   const SizedBox(height: 12),
                   _LargeDropdown(
-                    label: 'Storage Type',
+                    label: tr(context, 'storageType'),
+                    isRequired: true,
                     value: _storage,
                     options: const [
                       'Open Storage',
@@ -250,10 +270,11 @@ class _PredictionScreenState extends State<PredictionScreen> {
                     onChanged: (value) => setState(() => _storage = value),
                   ),
                   const SizedBox(height: 24),
-                  const _SectionTitle(title: 'Packaging'),
+                  _SectionTitle(title: tr(context, 'packaging')),
                   const SizedBox(height: 12),
                   _LargeDropdown(
-                    label: 'Packaging Type',
+                    label: tr(context, 'packagingType'),
+                    isRequired: true,
                     value: _packaging,
                     options: const [
                       'Plastic Crate',
@@ -265,10 +286,11 @@ class _PredictionScreenState extends State<PredictionScreen> {
                     onChanged: (value) => setState(() => _packaging = value),
                   ),
                   const SizedBox(height: 24),
-                  const _SectionTitle(title: 'Transport'),
+                  _SectionTitle(title: tr(context, 'transport')),
                   const SizedBox(height: 12),
                   _LargeDropdown(
-                    label: 'Transport Type',
+                    label: tr(context, 'transportMode'),
+                    isRequired: true,
                     value: _transport,
                     options: const [
                       'Bike',
@@ -280,7 +302,7 @@ class _PredictionScreenState extends State<PredictionScreen> {
                     onChanged: (value) => setState(() => _transport = value),
                   ),
                   const SizedBox(height: 32),
-                  const _SectionTitle(title: 'Weather'),
+                  _SectionTitle(title: tr(context, 'weather')),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _locationController,
@@ -288,7 +310,7 @@ class _PredictionScreenState extends State<PredictionScreen> {
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _fetchWeatherForEnteredLocation(),
                     decoration: InputDecoration(
-                      labelText: 'Location',
+                      labelText: tr(context, 'location'),
                       prefixIcon: const Icon(Icons.location_on),
                       suffixIcon: _isLoadingWeather
                           ? const Padding(
@@ -296,7 +318,9 @@ class _PredictionScreenState extends State<PredictionScreen> {
                               child: SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               ),
                             )
                           : IconButton(
@@ -312,7 +336,7 @@ class _PredictionScreenState extends State<PredictionScreen> {
 
                   _WeatherCard(
                     icon: Icons.thermostat,
-                    label: 'Temperature',
+                    label: tr(context, 'temperature'),
                     value: _temperature == null
                         ? '-- °C'
                         : '${_temperature!.toStringAsFixed(1)} °C',
@@ -322,13 +346,13 @@ class _PredictionScreenState extends State<PredictionScreen> {
 
                   _WeatherCard(
                     icon: Icons.water_drop,
-                    label: 'Humidity',
+                    label: tr(context, 'humidity'),
                     value: _humidity == null ? '-- %' : '$_humidity%',
                   ),
                   const SizedBox(height: 12),
                   _WeatherCard(
                     icon: Icons.cloud_outlined,
-                    label: 'Weather',
+                    label: tr(context, 'weather'),
                     value: _weatherCondition ?? '--',
                   ),
                   if (_weatherError != null) ...[
@@ -342,7 +366,7 @@ class _PredictionScreenState extends State<PredictionScreen> {
                   SizedBox(
                     height: 60,
                     child: ElevatedButton.icon(
-                      onPressed: _canPredict ? _openResult : null,
+                      onPressed: _canPredict ? _validateAndOpenResult : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _green,
                         foregroundColor: Colors.white,
@@ -354,14 +378,16 @@ class _PredictionScreenState extends State<PredictionScreen> {
                         ),
                       ),
                       icon: const Icon(Icons.auto_awesome, size: 28),
-                      label: const Text('Predict Shelf Life'),
+                      label: Text(tr(context, 'predictShelfLife')),
                     ),
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    _canPredict
-                        ? 'Ready to predict.'
-                        : 'Add 1 batch photo and at least 2 close-up photos to continue.',
+                    !_canPredict
+                        ? 'Add 1 batch photo and at least 2 close-up photos to continue.'
+                        : !_hasRequiredPredictionDetails
+                        ? 'Select Storage Type, Packaging Type and Transport Mode to continue.'
+                        : 'Ready to predict.',
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 16),
                   ),
@@ -375,6 +401,11 @@ class _PredictionScreenState extends State<PredictionScreen> {
   }
 
   Future<void> _openResult() async {
+    if (!_hasRequiredPredictionDetails) {
+      _validateAndOpenResult();
+      return;
+    }
+
     try {
       // Predict the overall batch image
       final overallResult = await _tomatoAiService.predict(_overallImage!.path);
@@ -415,8 +446,10 @@ class _PredictionScreenState extends State<PredictionScreen> {
       final finalConfidence = allResults
           .where((result) => result['class'] == finalClass)
           .map((result) => result['confidence'] as double)
-          .reduce((highest, confidence) =>
-              confidence > highest ? confidence : highest);
+          .reduce(
+            (highest, confidence) =>
+                confidence > highest ? confidence : highest,
+          );
 
       // Calculate shelf-life and recommendation
       String shelfLife;
@@ -499,7 +532,8 @@ class _PredictionScreenState extends State<PredictionScreen> {
             location: historyRecord.location,
             temperature: historyRecord.temperature,
             humidity: historyRecord.humidity,
-            reminderKey: historyRecordId ??
+            reminderKey:
+                historyRecordId ??
                 'batch_${historyRecord.createdAt.millisecondsSinceEpoch}',
           ),
         ),
@@ -593,14 +627,14 @@ class _ImageCaptureSection extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: onRetake,
-                      child: const Text('Retake'),
+                      child: Text(tr(context, 'retake')),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton(
                       onPressed: onRemove,
-                      child: const Text('Remove'),
+                      child: Text(tr(context, 'remove')),
                     ),
                   ),
                 ],
@@ -637,13 +671,13 @@ class _CloseUpCaptureSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              '2-3 Close-up Tomato Photos',
+            Text(
+              tr(context, 'closeUpPhotos'),
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'different tomatoes from different positions',
+            Text(
+              tr(context, 'closeUpDescription'),
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 14),
@@ -662,8 +696,8 @@ class _CloseUpCaptureSection extends StatelessWidget {
             if (images.isNotEmpty) const SizedBox(height: 14),
             if (canAdd) _ImageActions(onCamera: onCamera, onGallery: onGallery),
             if (!canAdd)
-              const Text(
-                'You have added 3 close-up photos.',
+              Text(
+                tr(context, 'closeUpPhotoCountMessage'),
                 style: TextStyle(fontSize: 16),
               ),
           ],
@@ -687,7 +721,7 @@ class _ImageActions extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: onCamera,
             icon: const Icon(Icons.camera_alt_outlined, size: 26),
-            label: const Text('Camera'),
+            label: Text(tr(context, 'cameraPhoto')),
           ),
         ),
         const SizedBox(width: 12),
@@ -695,7 +729,7 @@ class _ImageActions extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: onGallery,
             icon: const Icon(Icons.photo_library_outlined, size: 26),
-            label: const Text('Gallery'),
+            label: Text(tr(context, 'galleryPhoto')),
           ),
         ),
       ],
@@ -773,12 +807,14 @@ class _CloseUpPreview extends StatelessWidget {
 class _LargeDropdown extends StatelessWidget {
   const _LargeDropdown({
     required this.label,
+    this.isRequired = false,
     required this.value,
     required this.options,
     required this.onChanged,
   });
 
   final String label;
+  final bool isRequired;
   final String? value;
   final List<String> options;
   final ValueChanged<String?> onChanged;
@@ -790,7 +826,19 @@ class _LargeDropdown extends StatelessWidget {
       isExpanded: true,
       style: const TextStyle(fontSize: 19, color: Colors.black),
       decoration: InputDecoration(
-        labelText: label,
+        label: Text.rich(
+          TextSpan(
+            text: label,
+            children: isRequired
+                ? const [
+                    TextSpan(
+                      text: ' *',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ]
+                : const [],
+          ),
+        ),
         labelStyle: const TextStyle(fontSize: 18),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,

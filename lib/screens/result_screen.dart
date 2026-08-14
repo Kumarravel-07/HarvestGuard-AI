@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../services/notification_service.dart';
+import '../services/app_localizations.dart';
+import 'transportation_recommendation_screen.dart';
 
 class ResultScreen extends StatefulWidget {
   const ResultScreen({
@@ -54,11 +56,14 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Future<void> _loadReminder() async {
-    final reminder = await NotificationService.instance.loadReminder(widget.reminderKey);
-    if (mounted) setState(() {
-      _reminder = reminder;
-      _isLoadingReminder = false;
-    });
+    final reminder = await NotificationService.instance.loadReminder(
+      widget.reminderKey,
+    );
+    if (mounted)
+      setState(() {
+        _reminder = reminder;
+        _isLoadingReminder = false;
+      });
   }
 
   List<int> get _reminderDays {
@@ -67,16 +72,17 @@ class _ResultScreenState extends State<ResultScreen> {
     final firstDay = int.parse(matches.group(1)!);
     final lastDay = int.parse(matches.group(2)!);
     final startDay = lastDay <= 2 ? firstDay : 2;
-    return List<int>.generate(lastDay - startDay + 1, (index) => startDay + index);
+    return List<int>.generate(
+      lastDay - startDay + 1,
+      (index) => startDay + index,
+    );
   }
 
   Future<void> _selectReminderDay() async {
     final selectedDays = await showDialog<int>(
       context: context,
-      builder: (_) => _ReminderDayDialog(
-        days: _reminderDays,
-        shelfLife: widget.shelfLife,
-      ),
+      builder: (_) =>
+          _ReminderDayDialog(days: _reminderDays, shelfLife: widget.shelfLife),
     );
 
     if (selectedDays != null) await _scheduleReminder(selectedDays);
@@ -85,12 +91,14 @@ class _ResultScreenState extends State<ResultScreen> {
   Future<void> _scheduleReminder(int selectedDays) async {
     setState(() => _isSavingReminder = true);
     try {
-      final permissionGranted =
-          await NotificationService.instance.requestAndroidPermission();
+      final permissionGranted = await NotificationService.instance
+          .requestAndroidPermission();
       if (!permissionGranted) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Notification permission was not granted.')),
+            SnackBar(
+              content: Text(tr(context, 'notificationPermissionNotGranted')),
+            ),
           );
         }
         return;
@@ -103,12 +111,12 @@ class _ResultScreenState extends State<ResultScreen> {
       if (!mounted) return;
       setState(() => _reminder = reminder);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reminder set for this batch.')),
+        SnackBar(content: Text(tr(context, 'reminderSetForBatch'))),
       );
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to set reminder. Please try again.')),
+          SnackBar(content: Text(tr(context, 'unableSetReminder'))),
         );
       }
     } finally {
@@ -123,7 +131,7 @@ class _ResultScreenState extends State<ResultScreen> {
       if (!mounted) return;
       setState(() => _reminder = null);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reminder cancelled for this batch.')),
+        SnackBar(content: Text(tr(context, 'reminderCancelledForBatch'))),
       );
     } finally {
       if (mounted) setState(() => _isSavingReminder = false);
@@ -180,8 +188,8 @@ class _ResultScreenState extends State<ResultScreen> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         foregroundColor: const Color(0xFF1B5E20),
-        title: const Text(
-          'Prediction Result',
+        title: Text(
+          tr(context, 'predictionResult'),
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
         ),
       ),
@@ -203,8 +211,8 @@ class _ResultScreenState extends State<ResultScreen> {
                         size: 64,
                       ),
                       const SizedBox(height: 12),
-                      const Text(
-                        'Batch Analysis',
+                      Text(
+                        tr(context, 'batchAnalysis'),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 26,
@@ -213,14 +221,17 @@ class _ResultScreenState extends State<ResultScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'AI analyzed $totalImages tomato image${totalImages == 1 ? '' : 's'}',
+                        'AI $totalImages ${tr(context, 'tomato')} ${tr(context, 'batchAnalysis')}',
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 17),
                       ),
                       const SizedBox(height: 24),
-                      _ResultValue(label: 'Overall Condition', value: overallClass),
                       _ResultValue(
-                        label: 'Confidence',
+                        label: tr(context, 'overallCondition'),
+                        value: overallClass,
+                      ),
+                      _ResultValue(
+                        label: tr(context, 'confidence'),
                         value: '${overallConfidence.toStringAsFixed(1)}%',
                       ),
                       _ConditionDistributionChart(
@@ -230,30 +241,44 @@ class _ResultScreenState extends State<ResultScreen> {
                         unripeCount: unripeCount,
                       ),
                       const SizedBox(height: 18),
-                      const Text(
-                        'Condition Summary',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                      Text(
+                        tr(context, 'conditionSummary'),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const SizedBox(height: 10),
                       _ConditionCount(
                         icon: '🔴',
-                        label: 'Damaged',
+                        label: tr(context, 'damaged'),
                         count: damagedCount,
                       ),
-                      _ConditionCount(icon: '🟠', label: 'Old', count: oldCount),
-                      _ConditionCount(icon: '🟢', label: 'Ripe', count: ripeCount),
+                      _ConditionCount(
+                        icon: '🟠',
+                        label: tr(context, 'old'),
+                        count: oldCount,
+                      ),
+                      _ConditionCount(
+                        icon: '🟢',
+                        label: tr(context, 'ripe'),
+                        count: ripeCount,
+                      ),
                       _ConditionCount(
                         icon: '🟡',
-                        label: 'Unripe',
+                        label: tr(context, 'unripe'),
                         count: unripeCount,
                       ),
                       const SizedBox(height: 18),
                       _ResultValue(
-                        label: 'Spoilage Risk',
+                        label: tr(context, 'spoilageRisk'),
                         value: spoilageRisk.toUpperCase(),
                         valueColor: _riskColor,
                       ),
-                      _ResultValue(label: 'Estimated Shelf Life', value: shelfLife),
+                      _ResultValue(
+                        label: tr(context, 'estimatedShelfLife'),
+                        value: shelfLife,
+                      ),
                       _ShelfLifeReminder(
                         shelfLife: shelfLife,
                         reminder: _reminder,
@@ -263,22 +288,44 @@ class _ResultScreenState extends State<ResultScreen> {
                         onCancelReminder: _cancelReminder,
                       ),
                       _ResultValue(
-                        label: 'Recommended Action',
+                        label: tr(context, 'recommendedAction'),
                         value: recommendation,
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  TransportationRecommendationScreen(
+                                    temperature: temperature,
+                                  ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.local_shipping_outlined),
+                        label: Text(tr(context, 'checkTransport')),
                       ),
                       if (recordedAt != null) ...[
                         _ResultValue(
-                          label: 'Date and Time',
+                          label: tr(context, 'dateTime'),
                           value: _formattedDateTime,
                         ),
-                        if (location != null) _ResultValue(label: 'Location', value: location!),
+                        if (location != null)
+                          _ResultValue(
+                            label: tr(context, 'location'),
+                            value: location!,
+                          ),
                         if (temperature != null)
                           _ResultValue(
-                            label: 'Temperature',
+                            label: tr(context, 'temperature'),
                             value: '${temperature!.toStringAsFixed(1)} °C',
                           ),
                         if (humidity != null)
-                          _ResultValue(label: 'Humidity', value: '$humidity%'),
+                          _ResultValue(
+                            label: tr(context, 'humidity'),
+                            value: '$humidity%',
+                          ),
                       ],
                       _AttentionCard(
                         needsAttention: _needsAttention,
@@ -289,8 +336,8 @@ class _ResultScreenState extends State<ResultScreen> {
                         height: 56,
                         child: ElevatedButton(
                           onPressed: () => Navigator.of(context).pop(),
-                          child: const Text(
-                            'Back',
+                          child: Text(
+                            tr(context, 'back'),
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
@@ -326,18 +373,21 @@ class _ReminderDayDialogState extends State<_ReminderDayDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Check tomato batch after'),
+      title: Text(tr(context, 'checkTomatoBatchAfter')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Estimated shelf life: ${widget.shelfLife}'),
+          Text('${tr(context, 'estimatedShelfLife')}: ${widget.shelfLife}'),
           const SizedBox(height: 8),
           ...widget.days.map(
             (days) => RadioListTile<int>(
               contentPadding: EdgeInsets.zero,
               value: days,
               groupValue: _selectedDay,
-              title: Text('$days ${days == 1 ? 'day' : 'days'}'),
+              title: Text(
+                '$days ${days == 1 ? tr(context, 'dayLabel') : tr(context, 'daysLabel')}',
+              ),
               onChanged: (value) => setState(() => _selectedDay = value!),
             ),
           ),
@@ -346,11 +396,11 @@ class _ReminderDayDialogState extends State<_ReminderDayDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(tr(context, 'cancel')),
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(_selectedDay),
-          child: const Text('Set Reminder'),
+          child: Text(tr(context, 'setReminder')),
         ),
       ],
     );
@@ -374,10 +424,13 @@ class _ShelfLifeReminder extends StatelessWidget {
   final VoidCallback onSetReminder;
   final VoidCallback onCancelReminder;
 
-  String get _reminderText {
+  String _reminderText(BuildContext context) {
     if (reminder == null) return '';
-    if (reminder!.selectedDays == 1) return 'Reminder: Tomorrow';
-    return 'Reminder: In ${reminder!.selectedDays} days';
+    if (reminder!.selectedDays == 1) return tr(context, 'reminderTomorrow');
+    return tr(
+      context,
+      'reminderInDays',
+    ).replaceFirst('{days}', '${reminder!.selectedDays}');
   }
 
   @override
@@ -390,18 +443,18 @@ class _ShelfLifeReminder extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
                 Icon(Icons.notifications_outlined, color: Color(0xFF1B5E20)),
                 SizedBox(width: 8),
                 Text(
-                  'Shelf-Life Reminder',
+                  tr(context, 'setReminder'),
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                 ),
               ],
             ),
             const SizedBox(height: 10),
-            Text('Estimated shelf life: $shelfLife'),
+            Text('${tr(context, 'estimatedShelfLife')}: $shelfLife'),
             const SizedBox(height: 12),
             if (isLoading || isSaving)
               const SizedBox(
@@ -413,23 +466,25 @@ class _ShelfLifeReminder extends StatelessWidget {
                 ),
               )
             else if (reminder != null) ...[
-              const Text(
-                'Reminder set',
-                style: TextStyle(color: Color(0xFF1B5E20), fontWeight: FontWeight.w700),
+              Text(
+                tr(context, 'reminderSet'),
+                style: TextStyle(
+                  color: Color(0xFF1B5E20),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 4),
-              Text(_reminderText),
+              Text(_reminderText(context)),
               TextButton.icon(
                 onPressed: onCancelReminder,
                 icon: const Icon(Icons.notifications_off_outlined),
-                label: const Text('Cancel Reminder'),
+                label: Text(tr(context, 'cancelReminder')),
               ),
-            ]
-            else
+            ] else
               OutlinedButton.icon(
                 onPressed: onSetReminder,
                 icon: const Icon(Icons.notifications_outlined),
-                label: const Text('Set Reminder'),
+                label: Text(tr(context, 'setReminder')),
               ),
           ],
         ),
@@ -464,31 +519,31 @@ class _ConditionDistributionChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Condition Distribution',
+        Text(
+          tr(context, 'conditionDistribution'),
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 10),
         _DistributionBar(
-          label: 'Damaged',
+          label: tr(context, 'damaged'),
           count: damagedCount,
           maximum: chartMaximum,
           color: Colors.red,
         ),
         _DistributionBar(
-          label: 'Old',
+          label: tr(context, 'old'),
           count: oldCount,
           maximum: chartMaximum,
           color: Colors.orange,
         ),
         _DistributionBar(
-          label: 'Ripe',
+          label: tr(context, 'ripe'),
           count: ripeCount,
           maximum: chartMaximum,
           color: const Color(0xFF1B5E20),
         ),
         _DistributionBar(
-          label: 'Unripe',
+          label: tr(context, 'unripe'),
           count: unripeCount,
           maximum: chartMaximum,
           color: Colors.amber.shade800,
@@ -565,11 +620,18 @@ class _ResultValue extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: TextStyle(color: valueColor, fontSize: 18, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              color: valueColor,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -622,7 +684,9 @@ class _AttentionCard extends StatelessWidget {
     final backgroundColor = needsAttention
         ? const Color(0xFFFFF3E0)
         : const Color(0xFFE8F5E9);
-    final iconColor = needsAttention ? Colors.deepOrange : const Color(0xFF1B5E20);
+    final iconColor = needsAttention
+        ? Colors.deepOrange
+        : const Color(0xFF1B5E20);
 
     return Card(
       color: backgroundColor,
@@ -633,7 +697,9 @@ class _AttentionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
-              needsAttention ? Icons.warning_amber_rounded : Icons.check_circle_outline,
+              needsAttention
+                  ? Icons.warning_amber_rounded
+                  : Icons.check_circle_outline,
               color: iconColor,
               size: 28,
             ),
@@ -643,14 +709,26 @@ class _AttentionCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    needsAttention ? 'Attention Required' : 'Batch Status',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                    needsAttention
+                        ? tr(context, 'attentionRequired')
+                        : tr(context, 'batchAnalysis'),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     needsAttention
-                        ? '$affectedCount ${affectedCount == 1 ? 'tomato appears' : 'tomatoes appear'} damaged or old. Remove them from the healthy batch before storage or transportation to reduce the risk of spoilage.'
-                        : 'Batch appears to be in good condition. Continue proper storage and transportation practices.',
+                        ? tr(context, 'tomatoRiskWarning')
+                              .replaceFirst('{count}', '$affectedCount')
+                              .replaceFirst(
+                                '{item}',
+                                affectedCount == 1
+                                    ? tr(context, 'tomatoAppears')
+                                    : tr(context, 'tomatoesAppear'),
+                              )
+                        : tr(context, 'batchGoodCondition'),
                     style: const TextStyle(fontSize: 16, height: 1.35),
                   ),
                 ],

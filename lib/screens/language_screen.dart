@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'login_screen.dart';
+import '../services/app_localizations.dart';
 
 class LanguageScreen extends StatelessWidget {
   const LanguageScreen({super.key});
@@ -16,28 +17,24 @@ class LanguageScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.agriculture,
-                  color: Colors.green,
-                  size: 90,
-                ),
+                const Icon(Icons.agriculture, color: Colors.green, size: 90),
                 const SizedBox(height: 20),
                 const Text(
                   'HarvestGuard AI',
                   style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  'Select Your Language',
-                  style: TextStyle(fontSize: 18),
-                ),
+                Text(tr(context, 'language'), style: TextStyle(fontSize: 18)),
                 const SizedBox(height: 40),
                 SizedBox(
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: () => _openLogin(context),
-                    child: const Text('English', style: TextStyle(fontSize: 18)),
+                    onPressed: () => _selectLanguage(context, 'English'),
+                    child: const Text(
+                      'English',
+                      style: TextStyle(fontSize: 18),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -45,7 +42,7 @@ class LanguageScreen extends StatelessWidget {
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: () => _openLogin(context),
+                    onPressed: () => _selectLanguage(context, 'Tamil'),
                     child: const Text('தமிழ்', style: TextStyle(fontSize: 18)),
                   ),
                 ),
@@ -57,9 +54,11 @@ class LanguageScreen extends StatelessWidget {
     );
   }
 
-  void _openLogin(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
-    );
+  Future<void> _selectLanguage(BuildContext context, String language) async {
+    await AppLocalizations.controllerOf(context).setLanguage(language);
+    if (!context.mounted) return;
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const LoginScreen()));
   }
 }
